@@ -2,6 +2,8 @@ import discord
 import asyncio
 import urllib, json
 import sys, random
+import Adafruit_BBIO.GPIO as GPIO
+import time
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 
@@ -73,7 +75,7 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'help'):
         for command, desc in commands.items():
             await client.send_message(message.author, ctrl+command+": "+desc)
-        
+   
     elif message.content.startswith(ctrl+'sleep'):
         await asyncio.sleep(5)
         await client.send_message(message.channel, 'Done sleeping')
@@ -135,6 +137,19 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'spew'):
         await client.send_message(message.channel, rand_phrase())
     
+    elif message.content.startswith(ctrl+'led'):
+        msg = message.content.split(' ')
+        if (len(msg) < 2) :
+            await client.send_message(message.channel, 'Missing parameters')
+            return
+        GPIO.setup('P8_7', GPIO.OUT)
+        if(msg[1] == 'on'):
+           await client.send_message(message.channel, 'Turning LED on...')
+           GPIO.output('P8_7', GPIO.HIGH)
+        if(msg[1] == 'off'):
+           await client.send_message(message.channel, 'Turning LED off...')
+           GPIO.output('P8_7', GPIO.LOW)
+
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
             await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
@@ -142,4 +157,4 @@ async def on_message(message):
         await client.send_message(message.channel, rand_phrase())
         await sys.exit()
 
-client.run('NDEyNDQ2ODU0Mzk2MjQ4MDY0.DWKYwA.dAuwwtazoU28JMDCZ3nS9lZycRU')
+client.run('NDEyNDQ2ODU0Mzk2MjQ4MDY0.DWf6cQ.DlKtAe_70eGv5gFyIYaMzVgMX0s')
