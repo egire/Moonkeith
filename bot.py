@@ -106,7 +106,7 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content.split(' ')
         if (len(msg) < 3) :
-            await client.send_message(message.channel, 'Invalid command format.')
+            await client.send_message(message.channel, 'Missing parameters')
             return
         first_acc = SteamGameGrabber()
         facc_result = first_acc.call_all(msg[1])
@@ -144,10 +144,10 @@ async def on_message(message):
             return
         GPIO.setup('P8_7', GPIO.OUT)
         if(msg[1] == 'on'):
-           await client.send_message(message.channel, 'Turning LED on...')
+           await client.send_message(message.channel, 'Turning LED on, ' + rand_phrase()+'.')
            GPIO.output('P8_7', GPIO.HIGH)
         if(msg[1] == 'off'):
-           await client.send_message(message.channel, 'Turning LED off...')
+           await client.send_message(message.channel, 'Turning LED off, ' + rand_phrase()+'.')
            GPIO.output('P8_7', GPIO.LOW)
 
     elif message.content.startswith(ctrl+'quit'):
