@@ -1,0 +1,145 @@
+import discord
+import asyncio
+import urllib, json
+import sys, random
+from bs4 import BeautifulSoup
+from steam import SteamGameGrabber
+
+client = discord.Client()
+phrases = []
+admins = []
+ctrl = '!'
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [steam acc1] [steam acc2]': 'Posts random game from steam library', 'purge':'Remove all posts from channel', 'spew':'Spew random Moonkeith phrase', 'quit': 'Kills the bot'}
+
+
+def fetch_html(url):
+    headers = {}
+    headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0'
+    req = urllib.request.Request(url, headers = headers)
+    html = urllib.request.urlopen(req).read()
+    return html
+    
+def is_me(m):
+    return m.author == client.user
+
+def load_admins():
+    global admins
+    admins_file = open("./admins.txt", "r")
+    admins = admins_file.read().splitlines()
+    admins_file.close()
+
+def is_admin(user):
+    global admins
+    return (str(user) in admins)
+    
+def load_phrases():
+    global phrases
+    phrases_file = open("./phrases.txt", "r")
+    phrases = phrases_file.read().splitlines()
+    phrases_file.close()
+    
+def rand_phrase():
+    global phrases
+    random.seed()
+    phrase_num = random.randrange(0, len(phrases)-1)
+    phrase = phrases[phrase_num]
+    return phrase
+
+@client.event
+async def on_ready():
+    global admins
+    load_phrases()
+    load_admins()
+    print('Admins file loaded: ' + str(admins))
+    print('Phrase file loaded, ' + rand_phrase() +'.')
+    random.seed()
+    print('Logged in as ' + client.user.name)
+    print(client.user.id)
+    print('------')
+
+@client.event
+async def on_message(message):
+    if is_me(message):
+        return
+        
+    elif message.content.startswith(ctrl+'test'):
+        counter = 0
+        tmp = await client.send_message(message.channel, 'Calculating messages...')
+        async for log in client.logs_from(message.channel, limit=100):
+            if log.author == message.author:
+                counter += 1
+        await client.edit_message(tmp, 'You have {} messages.'.format(counter))
+
+    elif message.content.startswith(ctrl+'help'):
+        for command, desc in commands.items():
+            await client.send_message(message.author, ctrl+command+": "+desc)
+        
+    elif message.content.startswith(ctrl+'sleep'):
+        await asyncio.sleep(5)
+        await client.send_message(message.channel, 'Done sleeping')
+    
+    elif message.content.startswith(ctrl+'free'):
+        page = fetch_html('https://www.reddit.com/r/FreeGameFindings/')
+        soup = BeautifulSoup(page, 'html.parser')
+        for a in soup.find_all('a', attrs={'class': 'title'}):
+            game = a.text + ' - ' + a['href']
+            await client.send_message(message.channel, game)
+    
+    elif message.content.startswith(ctrl+'meme'):
+        page = fetch_html('https://www.memecenter.com/')
+        soup = BeautifulSoup(page, 'html.parser')
+        url = soup.find('a', attrs={'class': 'random'})
+        meme = fetch_html(url['href'])
+        soup = BeautifulSoup(meme, 'html.parser')
+        img = soup.find('img', attrs={'class': 'rrcont'})
+        await client.send_message(message.channel, img['src'])
+    
+    elif message.content.startswith(ctrl+'fortune'):
+        id = random.randrange(1,152)
+        page = fetch_html('http://www.myfortunecookie.co.uk/fortunes/' + str(id))
+        soup = BeautifulSoup(page, 'html.parser')
+        fortune = soup.find('div', attrs={'class': 'fortune'})
+        await client.send_message(message.channel, fortune.text)
+        
+    elif message.content.startswith(ctrl+'steam'):
+        msg = message.content.split(' ')
+        if (len(msg) < 3) :
+            await client.send_message(message.channel, 'Invalid command format.')
+            return
+        first_acc = SteamGameGrabber()
+        facc_result = first_acc.call_all(msg[1])
+        second_acc = SteamGameGrabber()
+        sacc_result = second_acc.call_all(msg[2])
+        if isinstance(facc_result, dict) and isinstance(sacc_result, dict):
+            facc = set(facc_result.items())
+            sacc = set(sacc_result.items())
+            games = facc & sacc
+            game = []
+            while True:
+                game = random.sample(games, 1)
+                with urllib.request.urlopen('http://store.steampowered.com/api/appdetails/?appids=' + game[0][1]) as url:
+                    data = json.loads(url.read().decode())
+                    break
+                    for category in data[str(game[0][1])]['data']['categories']:
+                        if category['description'] is 'Multiplayer':
+                            break
+            await client.send_message(message.channel, 'Play ' + str(game[0][0]) + ', ' + rand_phrase() +'.')
+    
+    elif message.content.startswith(ctrl+'purge'):
+        if(not (is_admin(message.author))):
+            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            return
+        await client.purge_from(message.channel, limit=100, check=is_me)
+        await client.send_message(message.channel, rand_phrase())
+    
+    elif message.content.startswith(ctrl+'spew'):
+        await client.send_message(message.channel, rand_phrase())
+    
+    elif message.content.startswith(ctrl+'quit'):
+        if(not (is_admin(message.author))):
+            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            return
+        await client.send_message(message.channel, rand_phrase())
+        await sys.exit()
+
+client.run('NDEyNDQ2ODU0Mzk2MjQ4MDY0.DWKYwA.dAuwwtazoU28JMDCZ3nS9lZycRU')
