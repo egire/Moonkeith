@@ -169,15 +169,15 @@ async def on_message(message):
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
     elif message.content.startswith(ctrl+'restart'):
-        await client.send_message(message.author, 'Restarting, ' + rand_phrase()+'.')
+        await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
-            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
         os.system( "/home/debian/start-bot.sh & disown" );
         sys.exit()
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
-            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
         await client.send_message(message.channel, rand_phrase())
         await sys.exit()
