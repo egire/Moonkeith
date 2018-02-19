@@ -1,21 +1,21 @@
+import sys, os, time, random
 import discord
 import asyncio
 import urllib, json
-import sys, os, time, random
-import Adafruit_BBIO.GPIO as GPIO
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
+
+if sys.platform == "linux" or sys.platform == "linux2":
+    import Adafruit_BBIO.GPIO as GPIO
+elif sys.platform == "win32":
+    GPIO = False
 
 client = discord.Client()
 phrases = []
 admins = []
 ctrl = '!'
 maxblink = 0
-commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [steam acc1] [steam acc2]': 'Posts random game from steam library', 'purge':'Remove all posts from channel', 'spew':'Spew random Moonkeith phrase', 'quit': 'Kills the bot'}
-
-#disable buzzer
-GPIO.setup('P9_16', GPIO.OUT)
-GPIO.output('P9_16', GPIO.HIGH)
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot'}
 
 def fetch_html(url):
     headers = {}
@@ -52,7 +52,9 @@ def rand_phrase():
 
 @client.event
 async def on_ready():
-    global admins
+    #disable buzzer on the BBB
+    GPIO.setup('P9_16', GPIO.OUT)
+    GPIO.output('P9_16', GPIO.HIGH)
     load_phrases()
     load_admins()
     print('Admins file loaded: ' + str(admins))
@@ -140,7 +142,13 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'spew'):
         await client.send_message(message.channel, rand_phrase())
     
-    elif message.content.startswith(ctrl+'test'):
+    elif message.content.startswith(ctrl+'pin'):
+        if(GPIO == False):
+            await client.send_message(message.author, 'GPIO not supported, ' + rand_phrase()+'.')
+            return
+        if(not (is_admin(message.author))):
+            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            return
         msg = message.content.split(' ')
         pin = msg[1]
         cmd = msg[2]
@@ -160,14 +168,15 @@ async def on_message(message):
               GPIO.output(pin, GPIO.LOW)
               await asyncio.sleep(sleep)
               blink = blink+1
-        if(cmd == 'low'):
+        elif(cmd == 'low'):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to low...')
            GPIO.output(pin, GPIO.LOW)
-        if(cmd == 'high'):
+        elif(cmd == 'high'):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
+   
     elif message.content.startswith(ctrl+'restart'):
         await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
@@ -175,6 +184,7 @@ async def on_message(message):
             return
         os.system( "/home/debian/start-bot.sh & disown" );
         sys.exit()
+    
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
