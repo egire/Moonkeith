@@ -1,9 +1,8 @@
 import sys, os, time, random
-import discord
-import asyncio
-import urllib, json
+import discord, urllib, json, asyncio
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
+from pinout import PIN
 
 if sys.platform == "linux" or sys.platform == "linux2":
     import Adafruit_BBIO.GPIO as GPIO
@@ -159,6 +158,8 @@ async def on_message(message):
         if (len(msg) < 2) :
             await client.send_message(message.channel, 'Missing parameters')
             return
+        if(pin[0] != 'p'):
+            pin = PIN[pin]
         GPIO.setup(pin, GPIO.OUT)
         global maxblink
         if(cmd == 'blink'):
