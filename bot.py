@@ -46,15 +46,19 @@ def load_phrases():
 def rand_phrase():
     global phrases
     random.seed()
-    phrase_num = random.randrange(0, len(phrases)-1)
+    phrase_num = random.randrange(0, len(phrases))
     phrase = phrases[phrase_num]
     return phrase
 
-@client.event
-async def on_ready():
-    #disable buzzer on the BBB
+def gpio_init():
+    if(GPIO == False):
+        return
     GPIO.setup('P9_16', GPIO.OUT)
     GPIO.output('P9_16', GPIO.HIGH)
+
+@client.event
+async def on_ready():
+    gpio_init()
     load_phrases()
     load_admins()
     print('Admins file loaded: ' + str(admins))
