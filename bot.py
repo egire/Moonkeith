@@ -11,8 +11,12 @@ client = discord.Client()
 phrases = []
 admins = []
 ctrl = '!'
+maxblink = 0
 commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [steam acc1] [steam acc2]': 'Posts random game from steam library', 'purge':'Remove all posts from channel', 'spew':'Spew random Moonkeith phrase', 'quit': 'Kills the bot'}
 
+#disable buzzer
+GPIO.setup('P9_16', GPIO.OUT)
+GPIO.output('P9_16', GPIO.HIGH)
 
 def fetch_html(url):
     headers = {}
@@ -64,7 +68,7 @@ async def on_message(message):
     if is_me(message):
         return
         
-    elif message.content.startswith(ctrl+'test'):
+    elif message.content.startswith(ctrl+'test1'):
         counter = 0
         tmp = await client.send_message(message.channel, 'Calculating messages...')
         async for log in client.logs_from(message.channel, limit=100):
@@ -106,7 +110,7 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content.split(' ')
         if (len(msg) < 3) :
-            await client.send_message(message.channel, 'Missing parameters')
+            await client.send_message(message.channel, 'Invalid command format.')
             return
         first_acc = SteamGameGrabber()
         facc_result = first_acc.call_all(msg[1])
@@ -137,18 +141,33 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'spew'):
         await client.send_message(message.channel, rand_phrase())
     
-    elif message.content.startswith(ctrl+'led'):
+    elif message.content.startswith(ctrl+'test'):
         msg = message.content.split(' ')
+        pin = msg[1]
+        cmd = msg[2]
         if (len(msg) < 2) :
             await client.send_message(message.channel, 'Missing parameters')
             return
-        GPIO.setup('P8_7', GPIO.OUT)
-        if(msg[1] == 'on'):
-           await client.send_message(message.channel, 'Turning LED on, ' + rand_phrase()+'.')
-           GPIO.output('P8_7', GPIO.HIGH)
-        if(msg[1] == 'off'):
-           await client.send_message(message.channel, 'Turning LED off, ' + rand_phrase()+'.')
-           GPIO.output('P8_7', GPIO.LOW)
+        GPIO.setup(pin, GPIO.OUT)
+        global maxblink
+        if(cmd == 'blink'):
+           maxblink = int(msg[3])
+           sleep = float(msg[4])
+           await client.send_message(message.channel, 'Blinking pin '+str(maxblink)+' Blinks @ '+str(sleep)+'sec sleep')
+           blink=0
+           while (blink < maxblink):
+              GPIO.output(pin, GPIO.HIGH)
+              await asyncio.sleep(sleep)
+              GPIO.output(pin, GPIO.LOW)
+              await asyncio.sleep(sleep)
+              blink = blink+1
+        if(cmd == 'low'):
+           maxblink = 0
+           await client.send_message(message.channel, 'Setting pin '+str(pin)+' to low...')
+           GPIO.output(pin, GPIO.LOW)
+        if(cmd == 'high'):
+           await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
+           GPIO.output(pin, GPIO.HIGH)
 
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
