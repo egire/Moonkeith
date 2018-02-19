@@ -1,9 +1,8 @@
 import discord
 import asyncio
 import urllib, json
-import sys, random
+import sys, os, time, random
 import Adafruit_BBIO.GPIO as GPIO
-import time
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 
@@ -166,9 +165,16 @@ async def on_message(message):
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to low...')
            GPIO.output(pin, GPIO.LOW)
         if(cmd == 'high'):
+           maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
-
+    elif message.content.startswith(ctrl+'restart'):
+        await client.send_message(message.author, 'Restarting, ' + rand_phrase()+'.')
+        if(not (is_admin(message.author))):
+            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            return
+        os.system( "/home/debian/start-bot.sh & disown" );
+        sys.exit()
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
             await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
