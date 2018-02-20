@@ -1,6 +1,6 @@
 import sys, os, time, random
 import discord, urllib, json, asyncio
-from PIL import Image
+#from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 from pinout import PIN
@@ -184,8 +184,8 @@ async def on_message(message):
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
     elif message.content.startswith(ctrl+'display'):
-        image = Image.open('test.jpg')
-        image.show()
+        #image = Image.open('test.jpg')
+        #image.show()
     elif message.content.startswith(ctrl+'restart'):
         await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
