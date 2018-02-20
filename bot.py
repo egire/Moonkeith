@@ -137,6 +137,7 @@ async def on_message(message):
             await client.send_message(message.channel, 'Play ' + str(game[0][0]) + ', ' + rand_phrase() +'.')
     
     elif message.content.startswith(ctrl+'purge'):
+        msg = message.content.split(' ')
         if(not (is_admin(message.author))):
             await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
             return
