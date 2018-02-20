@@ -1,5 +1,6 @@
 import sys, os, time, random
-import discord, urllib, json, asyncio, image
+import discord, urllib, json, asyncio
+from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 from pinout import PIN
