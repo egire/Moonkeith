@@ -183,9 +183,6 @@ async def on_message(message):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
-    elif message.content.startswith(ctrl+'display'):
-        #image = Image.open('test.jpg')
-        #image.show()
     elif message.content.startswith(ctrl+'restart'):
         await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
