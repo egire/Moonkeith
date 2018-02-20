@@ -1,5 +1,5 @@
 import sys, os, time, random
-import discord, urllib, json, asyncio
+import discord, urllib, json, asyncio, image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 from pinout import PIN
@@ -52,8 +52,8 @@ def rand_phrase():
 def gpio_init():
     if(GPIO == False):
         return
-    GPIO.setup('P9_16', GPIO.OUT)
-    GPIO.output('P9_16', GPIO.HIGH)
+    GPIO.setup(PIN['BUZZER'], GPIO.OUT)
+    GPIO.output(PIN['BUZZER'], GPIO.HIGH)
 
 @client.event
 async def on_ready():
@@ -139,7 +139,8 @@ async def on_message(message):
         if(not (is_admin(message.author))):
             await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
             return
-        await client.purge_from(message.channel, limit=100, check=is_me)
+        author = msg[1]
+        await client.purge_from(message.channel, limit=100, check=author)
         await client.send_message(message.channel, rand_phrase())
     
     elif message.content.startswith(ctrl+'spew'):
@@ -155,7 +156,7 @@ async def on_message(message):
         msg = message.content.split(' ')
         pin = msg[1]
         cmd = msg[2]
-        if (len(msg) < 2) :
+        if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing parameters')
             return
         if(pin[0] != 'p'):
@@ -181,7 +182,9 @@ async def on_message(message):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
-   
+    elif message.content.startswith(ctrl+'display'):
+        image = Image.open('test.jpg')
+        image.show()
     elif message.content.startswith(ctrl+'restart'):
         await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
