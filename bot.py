@@ -138,11 +138,11 @@ async def on_message(message):
     
     elif message.content.startswith(ctrl+'purge'):
         msg = message.content.split(' ')
+        author = msg[1]
         if(not (is_admin(message.author))):
             await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
             return
-        author = msg[1]
-        await client.purge_from(message.channel, limit=100, check=author)
+        await client.purge_from(message.channel, limit=100, check=(message.author==author))
         await client.send_message(message.channel, rand_phrase())
     
     elif message.content.startswith(ctrl+'spew'):
