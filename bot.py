@@ -198,7 +198,7 @@ async def on_message(message):
         if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing parameters')
             return
-        if(msg[1] == "clear" && displayer):
+        if(msg[1] == "clear" and displayer):
             displayer.kill()
         link = msg[1]
         fname=link.split('/')[-1]
