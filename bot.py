@@ -198,16 +198,18 @@ async def on_message(message):
         if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing parameters')
             return
+        if(msg[1] == "clear" && displayer):
+            displayer.kill()
         link = msg[1]
         fname=link.split('/')[-1]
         feh="feh -FZ ~/discord-bot/Moonkeith/images/{}".format(fname)
         wget='wget -P ~/discord-bot/Moonkeith/images/ {}'.format(link)
-        downloader=subprocess.Popen(shlex.split(wget), stdout=subprocess.PIPE)
+        downloader=subprocess.Popen(shlex.split(wget))
         downloader.wait()
         downloader.kill()
         if(displayer):
             displayer.kill()
-        displayer=subprocess.Popen(feh.split(' '), stdout=subprocess.PIPE)
+        displayer=subprocess.Popen(feh.split(' '))
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
