@@ -193,6 +193,9 @@ async def on_message(message):
         os.system("/home/debian/start-bot.sh & disown");
         sys.exit()
     elif message.content.startswith(ctrl+'display'):
+        if(not (is_admin(message.author))):
+            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
+            return
         global displayer
         msg = message.content.split(' ')
         if (len(msg) < 2):
