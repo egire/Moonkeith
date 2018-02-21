@@ -1,5 +1,5 @@
 import sys, os, time, random
-import discord, urllib, json, asyncio, subprocess
+import discord, urllib, json, asyncio, shlex, subprocess
 #from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
@@ -200,8 +200,9 @@ async def on_message(message):
             return
         link = msg[1]
         fname=link.split('/')[-1]
-        feh="feh -FZ ~/discord-bot/Moonkeith/images/" + fname
-        downloader=subprocess.Popen("wget -P ~/discord-bot/Moonkeith/images/"+link, shell=True, stdout=subprocess.PIPE)
+        feh="feh -FZ ~/discord-bot/Moonkeith/images/"+fname
+        wget="wget -P ~/discord-bot/Moonkeith/images/"+link
+        downloader=subprocess.Popen(shlex.split(wget), shell=True, stdout=subprocess.PIPE)
         downloader.wait()
         downloader.kill()
         if(displayer):
