@@ -198,6 +198,7 @@ async def on_message(message):
             return
         link = msg[1]
         fname=link.split('/')[-1]
+        os.system( "export DISPLAY=:0" );
         os.system( "wget -P ~/discord-bot/Moonkeith/images/ " + link );
         os.system( "feh -F ~/discord-bot/Moonkeith/images/" + fname );
         
