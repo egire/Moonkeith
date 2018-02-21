@@ -197,8 +197,12 @@ async def on_message(message):
             await client.send_message(message.channel, 'Missing parameters')
             return
         link = msg[1]
-        fname=link.split('/')[-1]
-        os.spawnl(os.P_DETACH, "wget -P ~/discord-bot/Moonkeith/images/ " + link +";DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname);
+        async def display(link):
+            fname=link.split('/')[-1]
+            cmd="wget -P ~/discord-bot/Moonkeith/images/ " + link\
+            +";DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname
+            os.system(cmd);
+        await display(link)
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
