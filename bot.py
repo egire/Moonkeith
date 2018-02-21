@@ -192,7 +192,7 @@ async def on_message(message):
         os.system( "/home/debian/start-bot.sh & disown" );
         sys.exit()
     elif message.content.startswith(ctrl+'image'):
-        os.system( "feh -F ~/discord-bot/Moonkeith/meme.jpg" );
+        os.system( "feh -F ~/discord-bot/Moonkeith/images/meme.jpg" );
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
