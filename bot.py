@@ -115,7 +115,7 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content.split(' ')
         if (len(msg) < 3) :
-            await client.send_message(message.channel, 'Invalid command format.')
+            await client.send_message(message.channel, 'Not enough .')
             return
         first_acc = SteamGameGrabber()
         facc_result = first_acc.call_all(msg[1])
@@ -189,10 +189,18 @@ async def on_message(message):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
-        os.system( "/home/debian/start-bot.sh & disown" );
+        os.system("/home/debian/start-bot.sh & disown");
         sys.exit()
-    elif message.content.startswith(ctrl+'image'):
-        os.system( "feh -F ~/discord-bot/Moonkeith/images/meme.jpg" );
+    elif message.content.startswith(ctrl+'display'):
+        msg = message.content.split(' ')
+        if (len(msg) < 2):
+            await client.send_message(message.channel, 'Missing parameters')
+            return
+        link = msg[1]
+        fname=link.split('/')[-1]
+        os.system( "wget -P ~/discord-bot/Moonkeith/images/ " + link );
+        os.system( "feh -F ~/discord-bot/Moonkeith/images/" + fname );
+        
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
