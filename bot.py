@@ -198,9 +198,8 @@ async def on_message(message):
             return
         link = msg[1]
         fname=link.split('/')[-1]
-        os.system( "export DISPLAY=:0" );
         os.system( "wget -P ~/discord-bot/Moonkeith/images/ " + link );
-        os.system( "feh -F ~/discord-bot/Moonkeith/images/" + fname );
+        os.system( "DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname );
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
