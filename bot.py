@@ -11,7 +11,7 @@ elif sys.platform == "win32":
     GPIO = False
 
 client = discord.Client()
-displayer = 
+displayer = []
 phrases = []
 admins = []
 ctrl = '!'
