@@ -1,5 +1,5 @@
 import sys, os, time, random
-import discord, urllib, json, asyncio
+import discord, urllib, json, asyncio, subprocess
 #from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
@@ -11,6 +11,7 @@ elif sys.platform == "win32":
     GPIO = False
 
 client = discord.Client()
+displayer = 
 phrases = []
 admins = []
 ctrl = '!'
@@ -192,17 +193,23 @@ async def on_message(message):
         os.system("/home/debian/start-bot.sh & disown");
         sys.exit()
     elif message.content.startswith(ctrl+'display'):
+        global displayer
         msg = message.content.split(' ')
         if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing parameters')
             return
         link = msg[1]
-        async def display(link):
-            fname=link.split('/')[-1]
-            cmd="wget -P ~/discord-bot/Moonkeith/images/ " + link\
-            +";DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname
-            os.system(cmd);
-        await display(link)
+        fname=link.split('/')[-1]
+        wget="wget -P ~/discord-bot/Moonkeith/images/ " + link
+        feh="feh -FZ ~/discord-bot/Moonkeith/images/" + fname
+        downloader=subprocess.Popen(wget.split(' '), shell=True, stdout=subprocess.PIPE)
+        downloader.wait()
+        downloader.kill()
+        if(displayer):
+            displayer.kill()
+        displayer=subprocess.Popen(feh.split(' '), shell=True, stdout=subprocess.PIPE)
+        
+        
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
