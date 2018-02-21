@@ -201,7 +201,7 @@ async def on_message(message):
         link = msg[1]
         fname=link.split('/')[-1]
         feh="feh -FZ ~/discord-bot/Moonkeith/images/" + fname
-        downloader=subprocess.Popen(["wget","-P","~/discord-bot/Moonkeith/images/", link], shell=True, stdout=subprocess.PIPE)
+        downloader=subprocess.Popen("wget -P ~/discord-bot/Moonkeith/images/"+link, shell=True, stdout=subprocess.PIPE)
         downloader.wait()
         downloader.kill()
         if(displayer):
