@@ -1,5 +1,5 @@
 import sys, os, time, random
-import discord, urllib, json, asyncio, subprocess
+import discord, urllib, json, asyncio
 #from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
@@ -198,8 +198,8 @@ async def on_message(message):
             return
         link = msg[1]
         fname=link.split('/')[-1]
-        subprocess.Popen(["wget", "-P","~/discord-bot/Moonkeith/images/", link], stdout=subprocess.PIPE, shell=True)
-        os.system( "DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname + "&" )
+        os.system( "wget -P ~/discord-bot/Moonkeith/images/ " + link +"&" );
+        os.system( "DISPLAY=:0; feh -FZ ~/discord-bot/Moonkeith/images/" + fname +"&");
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
