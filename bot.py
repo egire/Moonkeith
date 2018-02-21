@@ -202,12 +202,13 @@ async def on_message(message):
         fname=link.split('/')[-1]
         feh="feh -FZ ~/discord-bot/Moonkeith/images/{}".format(fname)
         wget='wget -P ~/discord-bot/Moonkeith/images/ {}'.format(link)
-        downloader=subprocess.Popen(shlex.split(wget), shell=True, stdout=subprocess.PIPE)
+        await client.send_message(message.channel, str(shlex.split(wget)))
+        downloader=subprocess.Popen(shlex.split(wget), stdout=subprocess.PIPE)
         downloader.wait()
         downloader.kill()
         if(displayer):
             displayer.kill()
-        displayer=subprocess.Popen(feh.split(' '), shell=True, stdout=subprocess.PIPE)
+        displayer=subprocess.Popen(feh.split(' '), stdout=subprocess.PIPE)
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
