@@ -201,12 +201,12 @@ async def on_message(message):
         if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing parameters')
             return
-        if(msg[1] == 'clear' and displayer):
+        if(displayer or msg[1] == 'clear'):
             displayer.kill()
+            displayer = []
         link = msg[1]
         fname=link.split('/')[-1]
         fext=fname.split('.')[-1]
-        #print(fext)
         if (fext == 'gif'):
             feh="gifview -a -g $(xdpyinfo  | grep -oP 'dimensions:\s+\K\S+') ~/discord-bot/Moonkeith/images/{}".format(fname)
         else:
@@ -215,8 +215,6 @@ async def on_message(message):
         downloader=subprocess.Popen(shlex.split(wget))
         downloader.wait()
         downloader.kill()
-        if(displayer):
-            displayer.kill()
         displayer=subprocess.Popen(feh.split(' '))
         
     elif message.content.startswith(ctrl+'quit'):
