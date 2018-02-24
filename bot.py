@@ -208,7 +208,7 @@ async def on_message(message):
         fname=link.split('/')[-1]
         fext=fname.split('.')[-1]
         if (fext == 'gif'):
-            feh="gifview -a -g $(xdpyinfo  | grep -oP 'dimensions:\s+\K\S+') ~/discord-bot/Moonkeith/images/{}".format(fname)
+            feh="gifview -a -g 800x480 ~/discord-bot/Moonkeith/images/{}".format(fname)
         else:
             feh="feh -FZ ~/discord-bot/Moonkeith/images/{}".format(fname)
         wget='wget -P ~/discord-bot/Moonkeith/images/ {}'.format(link)
