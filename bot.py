@@ -16,7 +16,7 @@ phrases = []
 admins = []
 ctrl = '!'
 maxblink = 0
-commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot'}
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD'}
 
 def fetch_html(url):
     headers = {}
