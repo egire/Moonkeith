@@ -7,8 +7,10 @@ from pinout import PIN
 
 if sys.platform == "linux" or sys.platform == "linux2":
     import Adafruit_BBIO.GPIO as GPIO
+    OS = "linux"
 elif sys.platform == "win32":
     GPIO = False
+    OS = "windows"
 
 client = discord.Client()
 displayer = []
@@ -22,7 +24,10 @@ def fetch_html(url):
     headers = {}
     headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0'
     req = urllib.request.Request(url, headers = headers)
-    html = urllib.request.urlopen(req).read()
+    try:
+        html = urllib.request.urlopen(req).read()
+    except:
+        return None
     return html
     
 def is_me(m):
@@ -98,19 +103,26 @@ async def on_message(message):
             await client.send_message(message.channel, game)
             
     elif message.content.startswith(ctrl+'g2a'):
-        msg = message.content.split(' ')
-        game = msg[1]
+        msg = message.content
         if (len(msg) < 2) :
             await client.send_message(message.channel, 'Not enough arguments.')
             return
-        search = fetch_html('https://www.g2a.com/en-us/search?query={}'.format(game))
+        index = msg.find(' ')
+        game = msg[index+1:]
+        search_url = 'https://www.g2a.com/en-us/search?query={}'.format(game).replace(" ", "%20")
+        print("test: {}".format(search_url))
+        search = fetch_html(search_url)
+        if (not(search)):
+            await client.send_message(message.channel, "No results for {0}".format(game))
+            return
         soup = BeautifulSoup(search, 'html.parser')
-        link = soup.find('a', attrs={'class': 'Card__title'})
-        await client.send_message(message.channel, link)
-        game = fetch_html('https://www.g2a.com/{}'.format(link['href']))
-        title = soup.find('h1', attrs={'class': 'product__title'})
-        price = soup.find('span', attrs={'class': 'price'})
-        await client.send_message(message.channel, title + ': ' + price + ' USD on G2A')
+        link = soup.find('h3', attrs={'class': 'Card__title'})
+        game_url = 'https://www.g2a.com{}'.format(link.a["href"])
+        game = fetch_html(game_url)
+        soup = BeautifulSoup(game, 'html.parser')
+        title = soup.find('h1', attrs={'class': 'product__title'}).text
+        price = soup.find('span', attrs={'class': 'price'}).text
+        await client.send_message(message.channel, "Title: {0}\nPrice: {1}\nURL: {2}".format(title, price, game_url))
  
     elif message.content.startswith(ctrl+'meme'):
         page = fetch_html('https://www.memecenter.com/')
@@ -125,8 +137,8 @@ async def on_message(message):
         id = random.randrange(1,152)
         page = fetch_html('http://www.myfortunecookie.co.uk/fortunes/' + str(id))
         soup = BeautifulSoup(page, 'html.parser')
-        fortune = soup.find('div', attrs={'class': 'fortune'})
-        await client.send_message(message.channel, fortune.text)
+        fortune = soup.find('div', attrs={'class': 'fortune'}).text
+        await client.send_message(message.channel, fortune)
         
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content.split(' ')
@@ -200,13 +212,19 @@ async def on_message(message):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
+           
     elif message.content.startswith(ctrl+'restart'):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
         await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
-        os.system("/home/debian/start-bot.sh & disown");
-        sys.exit()
+        if (OS == "linux"):
+            os.system("/home/debian/start-bot.sh & disown")
+            sys.exit(0)
+        elif (OS == "windows"):
+            os.system("call %cd%\start-bot.bat")
+            sys.exit(0)
+        
     elif message.content.startswith(ctrl+'display'):
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
