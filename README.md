@@ -1,4 +1,4 @@
-# Moonkeith Discord Bot V0.2.2
+# Moonkeith Discord Bot V0.2.5
 > Discord bot with Beagle Bone Black commands
 
 Discord bot with the abilities to fetch memes and display memes to a Beagle Bone Black. The bot can test pins on the BBB.
