@@ -106,7 +106,7 @@ async def on_message(message):
         search = fetch_html('https://www.g2a.com/en-us/search?query={}'.format(game))
         soup = BeautifulSoup(search, 'html.parser')
         link = soup.find('a', attrs={'class': 'Card__title'})
-        print(link)
+        await client.send_message(message.channel, link)
         game = fetch_html('https://www.g2a.com/{}'.format(link['href']))
         title = soup.find('h1', attrs={'class': 'product__title'})
         price = soup.find('span', attrs={'class': 'price'})
