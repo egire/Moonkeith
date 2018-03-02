@@ -16,7 +16,7 @@ phrases = []
 admins = []
 ctrl = '!'
 maxblink = 0
-commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD'}
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a': 'Look up game price on G2A marketplace'}
 
 def fetch_html(url):
     headers = {}
@@ -96,7 +96,21 @@ async def on_message(message):
         for a in soup.find_all('a', attrs={'class': 'title'}):
             game = a.text + ' - ' + a['href']
             await client.send_message(message.channel, game)
-    
+            
+    elif message.content.startswith(ctrl+'g2a'):
+        msg = message.content.split(' ')
+        game = msg[1]
+        if (len(msg) < 2) :
+            await client.send_message(message.channel, 'Not enough arguments.')
+            return
+        search = fetch_html('https://www.g2a.com/en-us/search?query={}'.format(game))
+        soup = BeautifulSoup(page, 'html.parser')
+        link = soup.find('a', attrs={'class': 'Card__title'})
+        game = fetch_html('https://www.g2a.com/{}'.format(link['href']))
+        title = soup.find('h1', attrs={'class': 'product__title'})
+        price = soup.find('span', attrs={'class': 'price'})
+        await client.send_message(message.channel, title + ': ' + price + ' USD on G2A')
+ 
     elif message.content.startswith(ctrl+'meme'):
         page = fetch_html('https://www.memecenter.com/')
         soup = BeautifulSoup(page, 'html.parser')
@@ -116,7 +130,7 @@ async def on_message(message):
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content.split(' ')
         if (len(msg) < 3) :
-            await client.send_message(message.channel, 'Not enough .')
+            await client.send_message(message.channel, 'Not enough arguments.')
             return
         first_acc = SteamGameGrabber()
         facc_result = first_acc.call_all(msg[1])
@@ -160,7 +174,7 @@ async def on_message(message):
         pin = msg[1]
         cmd = msg[2]
         if (len(msg) < 2):
-            await client.send_message(message.channel, 'Missing parameters')
+            await client.send_message(message.channel, 'Missing arguments.')
             return
         if(pin[0] != 'p'):
             pin = PIN[pin]
@@ -186,10 +200,10 @@ async def on_message(message):
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
     elif message.content.startswith(ctrl+'restart'):
-        await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
+        await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
         os.system("/home/debian/start-bot.sh & disown");
         sys.exit()
     elif message.content.startswith(ctrl+'display'):
@@ -199,7 +213,7 @@ async def on_message(message):
         global displayer
         msg = message.content.split(' ')
         if (len(msg) < 2):
-            await client.send_message(message.channel, 'Missing parameters')
+            await client.send_message(message.channel, 'Missing arguments.')
             return
         if(displayer or msg[1] == 'clear'):
             displayer.kill()
