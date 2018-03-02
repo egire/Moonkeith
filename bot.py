@@ -104,7 +104,7 @@ async def on_message(message):
             await client.send_message(message.channel, 'Not enough arguments.')
             return
         search = fetch_html('https://www.g2a.com/en-us/search?query={}'.format(game))
-        soup = BeautifulSoup(page, 'html.parser')
+        soup = BeautifulSoup(search, 'html.parser')
         link = soup.find('a', attrs={'class': 'Card__title'})
         game = fetch_html('https://www.g2a.com/{}'.format(link['href']))
         title = soup.find('h1', attrs={'class': 'product__title'})
