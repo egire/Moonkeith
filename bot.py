@@ -110,7 +110,6 @@ async def on_message(message):
         index = msg.find(' ')
         game = msg[index+1:]
         search_url = 'https://www.g2a.com/en-us/search?query={}'.format(game).replace(" ", "%20")
-        print("test: {}".format(search_url))
         search = fetch_html(search_url)
         if (not(search)):
             await client.send_message(message.channel, "No results for {0}".format(game))
@@ -123,7 +122,7 @@ async def on_message(message):
         title = soup.find('h1', attrs={'class': 'product__title'}).text
         price = soup.find('span', attrs={'class': 'price'}).text
         await client.send_message(message.channel, "Title: {0}\nPrice: {1}\nURL: {2}".format(title, price, game_url))
- 
+
     elif message.content.startswith(ctrl+'meme'):
         page = fetch_html('https://www.memecenter.com/')
         soup = BeautifulSoup(page, 'html.parser')
