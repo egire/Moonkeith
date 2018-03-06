@@ -13,39 +13,40 @@ elif sys.platform == "win32":
     OS = "windows"
 
 client = discord.Client()
-displayer = []
-phrases = []
-admins = []
+displayer = None
+phrases = {}
+admins = {}
+config = []
 ctrl = '!'
-maxblink = 0
 commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a': 'Look up game price on G2A marketplace'}
-
-def fetch_html(url):
-    headers = {}
-    headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0'
-    req = urllib.request.Request(url, headers = headers)
-    try:
-        html = urllib.request.urlopen(req).read()
-    except:
-        return None
-    return html
     
 def is_me(m):
     return m.author == client.user
-
-def load_admins():
-    global admins
-    admins_file = open("./admins.txt", "r")
-    admins = admins_file.read().splitlines()
-    admins_file.close()
-
+    
 def is_admin(user):
     global admins
     return (str(user) in admins)
+
+def load_admins():
+    global admins
+    admins_file = open("admins.txt", "r")
+    admins = admins_file.read().splitlines()
+    admins_file.close()
+
+def load_config():
+    global config, ctrl
+    with open("config.txt", "r") as config_file:
+    for line in config_file:
+        if(line[0] == '#'):
+            continue
+        name, var = line.partition('=')[::2]
+        config[name.strip()] = str(var)
+    config_file.close()
+    ctrl = config['ctrl']
     
 def load_phrases():
     global phrases
-    phrases_file = open("./phrases.txt", "r")
+    phrases_file = open("phrases.txt", "r")
     phrases = phrases_file.read().splitlines()
     phrases_file.close()
     
@@ -58,16 +59,27 @@ def rand_phrase():
 
 def gpio_init():
     if(GPIO == False):
-        return
+        return False
     GPIO.setup(PIN['BUZZER'], GPIO.OUT)
     GPIO.output(PIN['BUZZER'], GPIO.HIGH)
+    return True
 
+def fetch_html(url):
+    headers = {}
+    headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0'
+    req = urllib.request.Request(url, headers = headers)
+    try:
+        html = urllib.request.urlopen(req).read()
+    except:
+        return None
+    return html
+    
 @client.event
 async def on_ready():
     gpio_init()
     load_phrases()
-    load_admins()
     print('Admins file loaded: ' + str(admins))
+    load_admins()
     print('Phrase file loaded, ' + rand_phrase() +'.')
     random.seed()
     print('Logged in as ' + client.user.name)
@@ -176,6 +188,7 @@ async def on_message(message):
         await client.send_message(message.channel, rand_phrase())
     
     elif message.content.startswith(ctrl+'pin'):
+        maxblink = 100
         if(GPIO == False):
             await client.send_message(message.author, 'GPIO not supported, ' + rand_phrase()+'.')
             return
@@ -191,7 +204,6 @@ async def on_message(message):
         if(pin[0] != 'p'):
             pin = PIN[pin]
         GPIO.setup(pin, GPIO.OUT)
-        global maxblink
         if(cmd == 'blink'):
            maxblink = int(msg[3])
            sleep = float(msg[4])
@@ -225,29 +237,29 @@ async def on_message(message):
             sys.exit(0)
         
     elif message.content.startswith(ctrl+'display'):
+        global displayer
         if(not (is_admin(message.author))):
             await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
             return
-        global displayer
         msg = message.content.split(' ')
         if (len(msg) < 2):
             await client.send_message(message.channel, 'Missing arguments.')
             return
         if(displayer or msg[1] == 'clear'):
             displayer.kill()
-            displayer = []
+            displayer = None
         link = msg[1]
         fname=link.split('/')[-1]
         fext=fname.split('.')[-1]
         if (fext == 'gif'):
-            feh="gifview -a -g 800x480 ~/discord-bot/Moonkeith/images/{}".format(fname)
+            viewer="gifview -a -g 800x480 ~/discord-bot/Moonkeith/images/{}".format(fname)
         else:
-            feh="feh -FZ ~/discord-bot/Moonkeith/images/{}".format(fname)
+            viewer="feh -FZ ~/discord-bot/Moonkeith/images/{}".format(fname)
         wget='wget -P ~/discord-bot/Moonkeith/images/ {}'.format(link)
         downloader=subprocess.Popen(shlex.split(wget))
         downloader.wait()
         downloader.kill()
-        displayer=subprocess.Popen(feh.split(' '))
+        displayer=subprocess.Popen(viewer.split(' '))
         
     elif message.content.startswith(ctrl+'quit'):
         if(not (is_admin(message.author))):
@@ -256,4 +268,6 @@ async def on_message(message):
         await client.send_message(message.channel, rand_phrase())
         await sys.exit()
 
-client.run('NDEyNDQ2ODU0Mzk2MjQ4MDY0.DWf6cQ.DlKtAe_70eGv5gFyIYaMzVgMX0s')
+load_config()
+print("Configuration loaded.")
+client.run(config["token"])
