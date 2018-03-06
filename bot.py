@@ -16,7 +16,7 @@ client = discord.Client()
 displayer = None
 phrases = {}
 admins = {}
-config = []
+config = dict()
 ctrl = '!'
 commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a': 'Look up game price on G2A marketplace'}
     
@@ -35,14 +35,15 @@ def load_admins():
 
 def load_config():
     global config, ctrl
-    with open("config.txt", "r") as config_file:
+    with open("./config.txt", "r") as config_file:
         for line in config_file:
+            print('test')
             if(line[0] == '#'):
                 continue
             name, var = line.partition('=')[::2]
-            config[str(name)] = str(var.strip())
+            config[name.strip()] = str(var.strip())
     config_file.close()
-    ctrl = config['ctrl']
+    ctrl = config["ctrl"]
     
 def load_phrases():
     global phrases
