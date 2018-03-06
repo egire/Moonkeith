@@ -36,11 +36,11 @@ def load_admins():
 def load_config():
     global config, ctrl
     with open("config.txt", "r") as config_file:
-    for line in config_file:
-        if(line[0] == '#'):
-            continue
-        name, var = line.partition('=')[::2]
-        config[name.strip()] = str(var)
+        for line in config_file:
+            if(line[0] == '#'):
+                continue
+            name, var = line.partition('=')[::2]
+            config[name.strip()] = str(var)
     config_file.close()
     ctrl = config['ctrl']
     
