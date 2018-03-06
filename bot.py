@@ -40,7 +40,7 @@ def load_config():
             if(line[0] == '#'):
                 continue
             name, var = line.partition('=')[::2]
-            config[name.strip()] = str(var)
+            config[name] = var.strip()
     config_file.close()
     ctrl = config['ctrl']
     
