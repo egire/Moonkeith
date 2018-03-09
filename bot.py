@@ -1,4 +1,4 @@
-import sys, os, time, random
+import sys, os, time, random, re
 import discord, urllib, json, asyncio, shlex, subprocess
 #from PIL import Image
 from bs4 import BeautifulSoup
@@ -18,7 +18,7 @@ phrases = {}
 admins = {}
 config = dict()
 ctrl = '!'
-commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'steam [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a': 'Look up game price on G2A marketplace'}
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'game [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a [game name]': 'Look up game price on G2A marketplace', 'steam [game name]': 'Look up game price on Steam marketplace'}
     
 def is_me(m):
     return m.author == client.user
@@ -37,7 +37,6 @@ def load_config():
     global config, ctrl
     with open("./config.txt", "r") as config_file:
         for line in config_file:
-            print('test')
             if(line[0] == '#'):
                 continue
             name, var = line.partition('=')[::2]
@@ -74,7 +73,22 @@ def fetch_html(url):
     except:
         return None
     return html
-    
+
+def steam_appid(game):
+    search_url = 'http://store.steampowered.com/search/?term={}'.format(game).replace(" ", "%20")
+    search = fetch_html(search_url)
+    if (not(search)):
+        return None
+    soup = BeautifulSoup(search, 'html.parser')
+    appid = soup.find('a', attrs={'class': 'search_result_row'})['data-ds-appid']
+    applink = 'http://store.steampowered.com/app/{}/'.format(appid)
+    return (appid, applink)
+
+def steam_appjson(appid):
+    with urllib.request.urlopen('http://store.steampowered.com/api/appdetails/?appids=' + appid) as url:
+        data = json.loads(url.read().decode())
+        return data
+
 @client.event
 async def on_ready():
     gpio_init()
@@ -129,7 +143,7 @@ async def on_message(message):
             return
         soup = BeautifulSoup(search, 'html.parser')
         link = soup.find('h3', attrs={'class': 'Card__title'})
-        game_url = 'https://www.g2a.com{}'.format(link.a["href"])
+        game_url = 'https://www.g2a.com{}'.format(link.a['href'])
         game = fetch_html(game_url)
         soup = BeautifulSoup(game, 'html.parser')
         title = soup.find('h1', attrs={'class': 'product__title'}).text
@@ -152,7 +166,7 @@ async def on_message(message):
         fortune = soup.find('div', attrs={'class': 'fortune'}).text
         await client.send_message(message.channel, fortune)
         
-    elif message.content.startswith(ctrl+'steam'):
+    elif message.content.startswith(ctrl+'game'):
         msg = message.content.split(' ')
         if (len(msg) < 3) :
             await client.send_message(message.channel, 'Not enough arguments.')
@@ -268,6 +282,21 @@ async def on_message(message):
             return
         await client.send_message(message.channel, rand_phrase())
         await sys.exit()
+        
+    elif message.content.startswith(ctrl+'steam'):
+        msg = message.content
+        if (len(msg) < 2) :
+            await client.send_message(message.channel, 'Not enough arguments.')
+            return
+        index = msg.find(' ')
+        game = msg[index+1:]
+        game = steam_appid(game)
+        link = game[1]
+        appid = game[0]
+        data = steam_appjson(appid)[appid]['data']
+        name = data['name']
+        price = '{:,.2f}'.format(data['price_overview']['final']*0.01)
+        await client.send_message(message.channel, 'Title: {0}\nPrice: ${1}\nLink: {2}'.format(name, price, link))
 
 load_config()
 print("Configuration loaded.")

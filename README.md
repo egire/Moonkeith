@@ -17,8 +17,9 @@ Discord bot with the abilities to fetch memes and display memes to a Beagle Bone
 
 ## Commands:
 * !free: List of free game keys to channel
-* !steam [acc1] [acc2]: Posts random multiplayer game from both steam libraries
-* !g2a [search]: Posts the first result from G2A.com (game title, price, url)
+* !game [acc1] [acc2]: Posts random multiplayer game from both steam libraries
+* !g2a [game name: Posts the first result from G2A.com (game title, price, url)
+* !steam [game name]: Posts the first result from steampowered.com (game title, price, url)
 * !pin [pin name] [high/low/blink ([# blinks] [delay in secs])]: Tests a pin on the BBB
 * !meme: Posts random meme to channel
 * !fortune: Read off random fortune cookie
