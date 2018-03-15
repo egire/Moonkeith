@@ -1,5 +1,5 @@
-import sys, os, time, random, re
-import discord, urllib, json, asyncio, shlex, subprocess
+import sys, os, time, random
+import discord, urllib, json, asyncio, shlex, subprocess, re
 #from PIL import Image
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
@@ -27,13 +27,13 @@ def is_admin(user):
     global admins
     return (str(user) in admins)
 
-def load_admins():
+def admins_load():
     global admins
     admins_file = open("admins.txt", "r")
     admins = admins_file.read().splitlines()
     admins_file.close()
 
-def load_config():
+def config_load():
     global config, ctrl
     with open("./config.txt", "r") as config_file:
         for line in config_file:
@@ -44,13 +44,13 @@ def load_config():
     config_file.close()
     ctrl = config["ctrl"]
     
-def load_phrases():
+def phrases_load():
     global phrases
     phrases_file = open("phrases.txt", "r")
     phrases = phrases_file.read().splitlines()
     phrases_file.close()
     
-def rand_phrase():
+def phrases_rand():
     global phrases
     random.seed()
     phrase_num = random.randrange(0, len(phrases))
@@ -64,7 +64,7 @@ def gpio_init():
     GPIO.output(PIN['BUZZER'], GPIO.HIGH)
     return True
 
-def fetch_html(url):
+def html_fetch(url):
     headers = {}
     headers['User-Agent'] = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:48.0) Gecko/20100101 Firefox/48.0'
     req = urllib.request.Request(url, headers = headers)
@@ -72,30 +72,43 @@ def fetch_html(url):
         html = urllib.request.urlopen(req).read()
     except:
         return None
-    return html
+    return html    
 
 def steam_appid(game):
-    search_url = 'http://store.steampowered.com/search/?term={}'.format(game).replace(" ", "%20")
-    search = fetch_html(search_url)
+    search_url = 'https://store.steampowered.com/search/?term={}'.format(game).replace(" ", "%20")
+    search = html_fetch(search_url)
     if (not(search)):
         return None
     soup = BeautifulSoup(search, 'html.parser')
     appid = soup.find('a', attrs={'class': 'search_result_row'})['data-ds-appid']
-    applink = 'http://store.steampowered.com/app/{}/'.format(appid)
+    applink = 'https://store.steampowered.com/app/{}/'.format(appid)
     return (appid, applink)
 
 def steam_appjson(appid):
-    with urllib.request.urlopen('http://store.steampowered.com/api/appdetails/?appids=' + appid) as url:
-        data = json.loads(url.read().decode())
-        return data
+    data = None
+    try:
+        html = html_fetch('https://store.steampowered.com/api/appdetails/?appids={}'.format(appid))
+        data = json.loads(html.decode())
+    except:
+        return None
+    return data
 
+def coin_coinjson(coin):
+    data = None
+    try:
+        html = html_fetch('https://api.coinmarketcap.com/v1/ticker/{}/'.format(coin))
+        data = json.loads(html.decode())[0]
+    except:
+        return None
+    return data
+        
 @client.event
 async def on_ready():
     gpio_init()
-    load_phrases()
+    phrases_load()
     print('Admins file loaded: ' + str(admins))
-    load_admins()
-    print('Phrase file loaded, ' + rand_phrase() +'.')
+    admins_load()
+    print('Phrase file loaded, ' + phrases_rand() +'.')
     random.seed()
     print('Logged in as ' + client.user.name)
     print(client.user.id)
@@ -106,14 +119,6 @@ async def on_message(message):
     if is_me(message):
         return
         
-    elif message.content.startswith(ctrl+'test1'):
-        counter = 0
-        tmp = await client.send_message(message.channel, 'Calculating messages...')
-        async for log in client.logs_from(message.channel, limit=100):
-            if log.author == message.author:
-                counter += 1
-        await client.edit_message(tmp, 'You have {} messages.'.format(counter))
-
     elif message.content.startswith(ctrl+'help'):
         for command, desc in commands.items():
             await client.send_message(message.author, ctrl+command+": "+desc)
@@ -123,7 +128,7 @@ async def on_message(message):
         await client.send_message(message.channel, 'Done sleeping')
     
     elif message.content.startswith(ctrl+'free'):
-        page = fetch_html('https://www.reddit.com/r/FreeGameFindings/')
+        page = html_fetch('https://www.reddit.com/r/FreeGameFindings/')
         soup = BeautifulSoup(page, 'html.parser')
         for a in soup.find_all('a', attrs={'class': 'title'}):
             game = a.text + ' - ' + a['href']
@@ -137,31 +142,31 @@ async def on_message(message):
         index = msg.find(' ')
         game = msg[index+1:]
         search_url = 'https://www.g2a.com/en-us/search?query={}'.format(game).replace(" ", "%20")
-        search = fetch_html(search_url)
+        search = html_fetch(search_url)
         if (not(search)):
             await client.send_message(message.channel, "No results for {0}".format(game))
             return
         soup = BeautifulSoup(search, 'html.parser')
         link = soup.find('h3', attrs={'class': 'Card__title'})
         game_url = 'https://www.g2a.com{}'.format(link.a['href'])
-        game = fetch_html(game_url)
+        game = html_fetch(game_url)
         soup = BeautifulSoup(game, 'html.parser')
         title = soup.find('h1', attrs={'class': 'product__title'}).text
         price = soup.find('span', attrs={'class': 'price'}).text
         await client.send_message(message.channel, "Title: {0}\nPrice: {1}\nURL: {2}".format(title, price, game_url))
 
     elif message.content.startswith(ctrl+'meme'):
-        page = fetch_html('https://www.memecenter.com/')
+        page = html_fetch('https://www.memecenter.com/')
         soup = BeautifulSoup(page, 'html.parser')
         url = soup.find('a', attrs={'class': 'random'})
-        meme = fetch_html(url['href'])
+        meme = html_fetch(url['href'])
         soup = BeautifulSoup(meme, 'html.parser')
         img = soup.find('img', attrs={'class': 'rrcont'})
         await client.send_message(message.channel, img['src'])
     
     elif message.content.startswith(ctrl+'fortune'):
         id = random.randrange(1,152)
-        page = fetch_html('http://www.myfortunecookie.co.uk/fortunes/' + str(id))
+        page = html_fetch('http://www.myfortunecookie.co.uk/fortunes/' + str(id))
         soup = BeautifulSoup(page, 'html.parser')
         fortune = soup.find('div', attrs={'class': 'fortune'}).text
         await client.send_message(message.channel, fortune)
@@ -182,33 +187,33 @@ async def on_message(message):
             game = []
             while True:
                 game = random.sample(games, 1)
-                with urllib.request.urlopen('http://store.steampowered.com/api/appdetails/?appids=' + game[0][1]) as url:
+                with urllib.request.urlopen('https://store.steampowered.com/api/appdetails/?appids=' + game[0][1]) as url:
                     data = json.loads(url.read().decode())
                     break
                     for category in data[str(game[0][1])]['data']['categories']:
                         if category['description'] is 'Multiplayer':
                             break
-            await client.send_message(message.channel, 'Play ' + str(game[0][0]) + ', ' + rand_phrase() +'.')
+            await client.send_message(message.channel, 'Play ' + str(game[0][0]) + ', {}.'.format(phrases_rand()))
     
     elif message.content.startswith(ctrl+'purge'):
         msg = message.content.split(' ')
         author = msg[1]
         if(not (is_admin(message.author))):
-            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            await client.send_message(message.author, 'You are not an admin, {}.'.format(phrases_rand()))
             return
         await client.purge_from(message.channel, limit=100, check=(message.author==author))
-        await client.send_message(message.channel, rand_phrase())
+        await client.send_message(message.channel, phrases_rand())
     
     elif message.content.startswith(ctrl+'spew'):
-        await client.send_message(message.channel, rand_phrase())
+        await client.send_message(message.channel, phrases_rand())
     
     elif message.content.startswith(ctrl+'pin'):
         maxblink = 100
         if(GPIO == False):
-            await client.send_message(message.author, 'GPIO not supported, ' + rand_phrase()+'.')
+            await client.send_message(message.author, 'GPIO not supported, {}.'.format(phrases_rand()))
             return
         if(not (is_admin(message.author))):
-            await client.send_message(message.author, 'You are not an admin, ' + rand_phrase()+'.')
+            await client.send_message(message.author, 'You are not an admin, {}.'.format(phrases_rand()))
             return
         msg = message.content.split(' ')
         pin = msg[1]
@@ -222,7 +227,7 @@ async def on_message(message):
         if(cmd == 'blink'):
            maxblink = int(msg[3])
            sleep = float(msg[4])
-           await client.send_message(message.channel, 'Blinking pin '+str(maxblink)+' Blinks @ '+str(sleep)+'sec sleep')
+           await client.send_message(message.channel, 'Blinking pin {}'+str(maxblink)+' Blinks @ '+str(sleep)+'sec sleep')
            blink=0
            while (blink < maxblink):
               GPIO.output(pin, GPIO.HIGH)
@@ -238,23 +243,11 @@ async def on_message(message):
            maxblink = 0
            await client.send_message(message.channel, 'Setting pin '+str(pin)+' to high...')
            GPIO.output(pin, GPIO.HIGH)
-           
-    elif message.content.startswith(ctrl+'restart'):
-        if(not (is_admin(message.author))):
-            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
-            return
-        await client.send_message(message.channel, 'Restarting, ' + rand_phrase()+'.')
-        if (OS == "linux"):
-            os.system("/home/debian/start-bot.sh & disown")
-            sys.exit(0)
-        elif (OS == "windows"):
-            os.system("call %cd%\start-bot.bat")
-            sys.exit(0)
-        
+
     elif message.content.startswith(ctrl+'display'):
         global displayer
         if(not (is_admin(message.author))):
-            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
+            await client.send_message(message.channel, 'You are not an admin, {}.'.format(phrases_rand()))
             return
         msg = message.content.split(' ')
         if (len(msg) < 2):
@@ -276,13 +269,6 @@ async def on_message(message):
         downloader.kill()
         displayer=subprocess.Popen(viewer.split(' '))
         
-    elif message.content.startswith(ctrl+'quit'):
-        if(not (is_admin(message.author))):
-            await client.send_message(message.channel, 'You are not an admin, ' + rand_phrase()+'.')
-            return
-        await client.send_message(message.channel, rand_phrase())
-        await sys.exit()
-        
     elif message.content.startswith(ctrl+'steam'):
         msg = message.content
         if (len(msg) < 2) :
@@ -295,9 +281,53 @@ async def on_message(message):
         appid = game[0]
         data = steam_appjson(appid)[appid]['data']
         name = data['name']
-        price = '{:,.2f}'.format(data['price_overview']['final']*0.01)
-        await client.send_message(message.channel, 'Title: {0}\nPrice: ${1}\nLink: {2}'.format(name, price, link))
+        try:
+            price = '${:,.2f}'.format(data['price_overview']['final']*0.01)
+        except:
+            price = "See Link"
+        await client.send_message(message.channel, 'Title: {0}\nPrice: {1}\nLink: {2}'.format(name, price, link))
+        
+    elif message.content.startswith(ctrl+'coin'):
+        msg = message.content
+        if (len(msg) < 2) :
+            await client.send_message(message.channel, 'Not enough arguments.')
+            return
+        msg = message.content.split(' ')
+        coin = msg[1]
+        if(coin == 'bitconnect'):
+            await client.send_message(message.channel, 'https://www.youtube.com/watch?v=EY8rq1AyCPY')
+            return
+        data = coin_coinjson(coin)
+        if(data == None): 
+            await client.send_message(message.channel, 'Invalid coin.')
+            return
+        name = data['name']
+        price = data['price_usd']
+        pct_change_1h = data['percent_change_1h']
+        pct_change_24h = data['percent_change_24h']
+        pct_change_7d = data['percent_change_7d']
+        link = 'https://coinmarketcap.com/currencies/{}/'.format(coin)
+        await client.send_message(message.channel, 'Name: {0}\nPrice: ${1}\nChange (1hr): {2}%\nChange (24hr): {3}%\nChange (7d): {4}%\nLink: {5}'.format(name, price, pct_change_1h, pct_change_24h, pct_change_7d, link))
+           
+    elif message.content.startswith(ctrl+'restart'):
+        if(not (is_admin(message.author))):
+            await client.send_message(message.channel, 'You are not an admin, {}.'.format(phrases_rand()))
+            return
+        await client.send_message(message.channel, 'Restarting, {}.'.format(phrases_rand()))
+        if (OS == "linux"):
+            os.system("/home/debian/start-bot.sh & disown")
+            sys.exit(0)
+        elif (OS == "windows"):
+            os.system("call %cd%\start-bot.bat")
+            sys.exit(0)
+        
+    elif message.content.startswith(ctrl+'quit'):
+        if(not (is_admin(message.author))):
+            await client.send_message(message.channel, 'You are not an admin, {}.'.format(phrases_rand()))
+            return
+        await client.send_message(message.channel, phrases_rand())
+        await sys.exit()
 
-load_config()
+config_load()
 print("Configuration loaded.")
 client.run(config["token"])
