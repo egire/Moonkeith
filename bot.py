@@ -18,7 +18,7 @@ phrases = {}
 admins = {}
 config = dict()
 ctrl = '!'
-commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'game [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a [game name]': 'Look up game price on G2A marketplace', 'steam [game name]': 'Look up game price on Steam marketplace'}
+commands = {'free': 'Posts list of free game keys to channel', 'meme': 'Posts random meme to channel', 'fortune':'Read off random fortune cookie', 'game [acc1] [acc2]': 'Posts random multiplayer game from both steam libraries', 'purge':'Remove all posts from channel', 'spew':'Spew random phrase', 'quit': 'Kills the bot', 'pin [pin name] [high/low/blink ([# blinks] [delay in secs])] ': 'tests a pin on the BBB', 'restart':'Updates and restarts the bot', 'display [url]':'Displays an image on the LCD', 'g2a [game name]': 'Look up game price on G2A marketplace', 'steam [game name]': 'Look up game price on Steam marketplace', 'crypto [coin name]': 'Look up cryptocurrency price (USD) and change over an hour, 1 day, 1 week'}
     
 def is_me(m):
     return m.author == client.user
@@ -287,7 +287,7 @@ async def on_message(message):
             price = "See Link"
         await client.send_message(message.channel, 'Title: {0}\nPrice: {1}\nLink: {2}'.format(name, price, link))
         
-    elif message.content.startswith(ctrl+'coin'):
+    elif message.content.startswith(ctrl+'crypto'):
         msg = message.content
         if (len(msg) < 2) :
             await client.send_message(message.channel, 'Not enough arguments.')
