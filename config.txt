@@ -1,1 +1,4 @@
-
+#control character to control bot
+ctrl = !
+# bot discord api token
+token = NDEyNDQ2ODU0Mzk2MjQ4MDY0.DX-92g.mhCe75hDAoUaWT_U3wD9ePnAW70
