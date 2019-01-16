@@ -1,8 +1,10 @@
-import sys, os, time, random, logger
+import sys, os, time, random, logging
 import discord, urllib, json, asyncio, shlex, subprocess, re
 from bs4 import BeautifulSoup
 from steam import SteamGameGrabber
 from pinout import PIN
+
+logging.basicConfig(filename="bot.log", level=logging.DEBUG)
 
 if sys.platform == "linux" or sys.platform == "linux2":
     import Adafruit_BBIO.GPIO as GPIO
@@ -11,7 +13,6 @@ elif sys.platform == "win32":
     GPIO = False
     OS = "windows"
 
-logger = logging.getLogger('simple_example')
 client = discord.Client()
 displayer = None
 phrases = {}
@@ -328,13 +329,8 @@ async def on_message(message):
         await client.send_message(message.channel, phrases_rand())
         await sys.exit()
 
-logger.setLevel(logging.DEBUG)
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+
 
 config_load()
-print("Configuration loaded.")
+logging.info("Configuration loaded.")
 client.run(config["token"])
